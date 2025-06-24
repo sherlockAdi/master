@@ -280,4 +280,119 @@ body {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
+}
+
+/* HomePage summary styles - enhanced */
+.home-summary-card {
+  max-width: 900px;
+  margin: 0 auto;
+  margin-top: 40px;
+  padding: 48px 32px 48px 32px;
+  background: linear-gradient(120deg, #f4f6fb 0%, #e3e9f7 100%);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(25, 118, 210, 0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.home-title {
+  text-align: center;
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: #1976d2;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.home-desc {
+  text-align: center;
+  color: #4a5a6a;
+  font-size: 1.18rem;
+  margin-bottom: 38px;
+  max-width: 600px;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 36px;
+  width: 100%;
+  margin-top: 12px;
+  justify-items: center;
+}
+.summary-card {
+  background: linear-gradient(120deg, #e3e9f7 60%, #f4f6fb 100%);
+  border-radius: 18px;
+  box-shadow: 0 4px 18px 0 rgba(25, 118, 210, 0.10);
+  padding: 38px 24px 30px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 200px;
+  max-width: 260px;
+  width: 100%;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.summary-card:hover {
+  box-shadow: 0 10px 32px 0 rgba(25, 118, 210, 0.18);
+  transform: translateY(-4px) scale(1.04);
+}
+.summary-icon {
+  font-size: 2.6rem;
+  color: #1976d2;
+  margin-bottom: 12px;
+  background: #fff;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px 0 rgba(25, 118, 210, 0.10);
+}
+.summary-label {
+  font-size: 1.13rem;
+  color: #1976d2;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+.summary-value {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #222;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.summary-card.clickable {
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+}
+.summary-card.clickable:hover {
+  box-shadow: 0 12px 36px 0 rgba(25, 118, 210, 0.22);
+  transform: translateY(-6px) scale(1.06);
+  border-top-width: 6px !important;
+}
+.entity-list-view {
+  margin-top: 32px;
+  width: 100%;
+  animation: fadeInList 0.25s cubic-bezier(.4,2,.6,1) both;
+}
+@keyframes fadeInList {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 600px) {
+  .home-summary-card {
+    padding: 24px 6px 24px 6px;
+  }
+  .summary-grid {
+    gap: 18px;
+  }
+  .summary-card {
+    padding: 24px 8px 18px 8px;
+    min-width: 140px;
+    max-width: 100%;
+  }
 } 
