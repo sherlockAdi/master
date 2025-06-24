@@ -1,30 +1,19 @@
 import React from 'react';
-import { Box, CssBaseline, AppBar, Toolbar, Typography } from '@mui/material';
 import Sidebar from './Sidebar';
+import '../main.css';
 
 const Layout = ({ children }) => {
     return (
-        <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-            <AppBar
-                position="fixed"
-                sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-            >
-                <Toolbar>
-                    <Typography variant="h6" noWrap component="div">
-                        Master CRUD Application
-                    </Typography>
-                </Toolbar>
-            </AppBar>
+        <div className="layout-root">
+            <header className="main-header">
+                <div className="header-logo">M</div>
+                <div className="header-title">Master CRUD Application</div>
+            </header>
             <Sidebar />
-            <Box
-                component="main"
-                sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}
-            >
-                <Toolbar />
+            <main className="main-content">
                 {children}
-            </Box>
-        </Box>
+            </main>
+        </div>
     );
 };
 

@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import districtService from '../services/districtService';
 import stateService from '../services/stateService';
-import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button,
-    Dialog, DialogActions, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel,
-    Select, MenuItem, FormControl, InputLabel, CircularProgress, Typography, Box, IconButton
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import '../main.css';
 
 const DistrictsPage = () => {
     const [districts, setDistricts] = useState([]);
@@ -22,8 +16,8 @@ const DistrictsPage = () => {
     }, []);
 
     const loadInitialData = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             const [distResponse, stateResponse] = await Promise.all([
                 districtService.getAllDistricts(),
                 stateService.getAllStates()
@@ -31,7 +25,7 @@ const DistrictsPage = () => {
             setDistricts(distResponse.data);
             setStates(stateResponse.data);
         } catch (error) {
-            console.error("Failed to load data", error);
+            // handle error
         } finally {
             setLoading(false);
         }
@@ -62,7 +56,8 @@ const DistrictsPage = () => {
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         if (currentDistrict) {
             await districtService.updateDistrict(currentDistrict.district_id, formData);
         } else {
@@ -80,80 +75,81 @@ const DistrictsPage = () => {
     const getStateName = (stateid) => {
         const state = states.find(s => s.stateid === stateid);
         return state ? state.state : 'N/A';
-    }
+    };
 
     return (
-        <Paper sx={{ p: 2, margin: 'auto', maxWidth: 1200, flexGrow: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h4">Districts</Typography>
-                <Button variant="contained" onClick={() => handleOpen()}>Add District</Button>
-            </Box>
-            
+        <div className="page-card">
+            <div className="page-header">
+                <h2>Districts</h2>
+                <button className="btn-primary" onClick={() => handleOpen()}>+ Add District</button>
+            </div>
             {loading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 400 }}>
-                    <CircularProgress />
-                </Box>
+                <div className="loader">Loading...</div>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>District Name</TableCell>
-                                <TableCell>State</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                <div className="table-responsive">
+                    <table className="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>District Name</th>
+                                <th>State</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             {districts.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        No districts found.
-                                    </TableCell>
-                                </TableRow>
+                                <tr><td colSpan={5} style={{ textAlign: 'center' }}>No districts found.</td></tr>
                             ) : (
                                 districts.map((district) => (
-                                    <TableRow key={district.district_id} hover>
-                                        <TableCell>{district.district_id}</TableCell>
-                                        <TableCell>{district.district_name}</TableCell>
-                                        <TableCell>{getStateName(district.stateid)}</TableCell>
-                                        <TableCell>{district.status ? 'Active' : 'Inactive'}</TableCell>
-                                        <TableCell>
-                                            <IconButton onClick={() => handleOpen(district)}><EditIcon /></IconButton>
-                                            <IconButton onClick={() => handleDelete(district.district_id)}><DeleteIcon /></IconButton>
-                                        </TableCell>
-                                    </TableRow>
+                                    <tr key={district.district_id}>
+                                        <td>{district.district_id}</td>
+                                        <td>{district.district_name}</td>
+                                        <td>{getStateName(district.stateid)}</td>
+                                        <td>{district.status ? 'Active' : 'Inactive'}</td>
+                                        <td>
+                                            <button className="btn-icon" onClick={() => handleOpen(district)} title="Edit">✏️</button>
+                                            <button className="btn-icon" onClick={() => handleDelete(district.district_id)} title="Delete">🗑️</button>
+                                        </td>
+                                    </tr>
                                 ))
                             )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        </tbody>
+                    </table>
+                </div>
             )}
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>{currentDistrict ? 'Edit District' : 'Add District'}</DialogTitle>
-                <DialogContent>
-                    <TextField autoFocus margin="dense" name="district_name" label="District Name" type="text" fullWidth variant="outlined" value={formData.district_name} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <FormControl fullWidth margin="dense" variant="outlined" sx={{ mb: 2 }}>
-                        <InputLabel>State</InputLabel>
-                        <Select name="stateid" value={formData.stateid} onChange={handleChange} label="State">
-                            {states.map(state => (
-                                <MenuItem key={state.stateid} value={state.stateid}>
-                                    {state.state}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControlLabel control={<Checkbox checked={formData.status} onChange={handleChange} name="status" />} label="Active" />
-                    <FormControlLabel control={<Checkbox checked={formData.archive} onChange={handleChange} name="archive" />} label="Archive" />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">Save</Button>
-                </DialogActions>
-            </Dialog>
-        </Paper>
+            {open && (
+                <div className="modal-overlay" onClick={handleClose}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <h3>{currentDistrict ? 'Edit District' : 'Add District'}</h3>
+                        <form onSubmit={handleSubmit} className="modal-form">
+                            <label>
+                                District Name
+                                <input type="text" name="district_name" value={formData.district_name} onChange={handleChange} required />
+                            </label>
+                            <label>
+                                State
+                                <select name="stateid" value={formData.stateid} onChange={handleChange} required>
+                                    <option value="">Select State</option>
+                                    {states.map(state => (
+                                        <option key={state.stateid} value={state.stateid}>{state.state}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <div className="form-row">
+                                <label><input type="checkbox" name="status" checked={formData.status} onChange={handleChange} /> Active</label>
+                                <label><input type="checkbox" name="archive" checked={formData.archive} onChange={handleChange} /> Archive</label>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={handleClose}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

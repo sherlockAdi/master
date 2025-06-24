@@ -1,50 +1,38 @@
 import React from 'react';
-import { Drawer, List, ListItem, ListItemIcon, ListItemText, Toolbar } from '@mui/material';
-import { Link } from 'react-router-dom';
-import HomeIcon from '@mui/icons-material/Home';
-import PublicIcon from '@mui/icons-material/Public';
-import SouthAmericaIcon from '@mui/icons-material/SouthAmerica';
-import DomainIcon from '@mui/icons-material/Domain';
-import CorporateFareIcon from '@mui/icons-material/CorporateFare';
-import BusinessIcon from '@mui/icons-material/Business';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-
-const drawerWidth = 240;
+import { Link, useLocation } from 'react-router-dom';
+import '../main.css';
 
 const menuItems = [
-    { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'Countries', icon: <PublicIcon />, path: '/countries' },
-    { text: 'States', icon: <SouthAmericaIcon />, path: '/states' },
-    { text: 'Districts', icon: <DomainIcon />, path: '/districts' },
-    { text: 'Tehsils', icon: <CorporateFareIcon />, path: '/tehsils' },
-    { text: 'Departments', icon: <BusinessIcon />, path: '/departments' },
-    { text: 'Designations', icon: <AssignmentIndIcon />, path: '/designations' },
+    { text: 'Home', icon: '🏠', path: '/' },
+    { text: 'Countries', icon: '🌍', path: '/countries' },
+    { text: 'States', icon: '🗺️', path: '/states' },
+    { text: 'Districts', icon: '🏢', path: '/districts' },
+    { text: 'Tehsils', icon: '🏞️', path: '/tehsils' },
+    { text: 'Departments', icon: '🏛️', path: '/departments' },
+    { text: 'Designations', icon: '👔', path: '/designations' },
 ];
 
 const Sidebar = () => {
+    const location = useLocation();
     return (
-        <Drawer
-            sx={{
-                width: drawerWidth,
-                flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                    width: drawerWidth,
-                    boxSizing: 'border-box',
-                },
-            }}
-            variant="permanent"
-            anchor="left"
-        >
-            <Toolbar />
-            <List>
+        <aside className="sidebar">
+            <div className="sidebar-logo">
+                <div className="sidebar-avatar">M</div>
+                <div className="sidebar-title">Master CRUD</div>
+            </div>
+            <nav className="sidebar-nav">
                 {menuItems.map((item) => (
-                    <ListItem button component={Link} to={item.path} key={item.text}>
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.text} />
-                    </ListItem>
+                    <Link
+                        to={item.path}
+                        key={item.text}
+                        className={`sidebar-link${location.pathname === item.path ? ' active' : ''}`}
+                    >
+                        <span className="sidebar-icon">{item.icon}</span>
+                        <span>{item.text}</span>
+                    </Link>
                 ))}
-            </List>
-        </Drawer>
+            </nav>
+        </aside>
     );
 };
 

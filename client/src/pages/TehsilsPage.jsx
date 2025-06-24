@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import tehsilService from '../services/tehsilService';
 import districtService from '../services/districtService';
-import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button,
-    Dialog, DialogActions, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel,
-    Select, MenuItem, FormControl, InputLabel, CircularProgress, Typography, Box, IconButton
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import '../main.css';
 
 const TehsilsPage = () => {
     const [tehsils, setTehsils] = useState([]);
@@ -22,8 +16,8 @@ const TehsilsPage = () => {
     }, []);
 
     const loadInitialData = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             const [tehsilResponse, distResponse] = await Promise.all([
                 tehsilService.getAllTehsils(),
                 districtService.getAllDistricts()
@@ -31,7 +25,7 @@ const TehsilsPage = () => {
             setTehsils(tehsilResponse.data);
             setDistricts(distResponse.data);
         } catch (error) {
-            console.error("Failed to load data", error);
+            // handle error
         } finally {
             setLoading(false);
         }
@@ -62,7 +56,8 @@ const TehsilsPage = () => {
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         if (currentTehsil) {
             await tehsilService.updateTehsil(currentTehsil.tehsil_id, formData);
         } else {
@@ -80,80 +75,81 @@ const TehsilsPage = () => {
     const getDistrictName = (district_id) => {
         const district = districts.find(d => d.district_id === district_id);
         return district ? district.district_name : 'N/A';
-    }
+    };
 
     return (
-        <Paper sx={{ p: 2, margin: 'auto', maxWidth: 1200, flexGrow: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h4">Tehsils</Typography>
-                <Button variant="contained" onClick={() => handleOpen()}>Add Tehsil</Button>
-            </Box>
-
+        <div className="page-card">
+            <div className="page-header">
+                <h2>Tehsils</h2>
+                <button className="btn-primary" onClick={() => handleOpen()}>+ Add Tehsil</button>
+            </div>
             {loading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 400 }}>
-                    <CircularProgress />
-                </Box>
+                <div className="loader">Loading...</div>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Tehsil Name</TableCell>
-                                <TableCell>District</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                <div className="table-responsive">
+                    <table className="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tehsil Name</th>
+                                <th>District</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             {tehsils.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        No tehsils found.
-                                    </TableCell>
-                                </TableRow>
+                                <tr><td colSpan={5} style={{ textAlign: 'center' }}>No tehsils found.</td></tr>
                             ) : (
                                 tehsils.map((tehsil) => (
-                                    <TableRow key={tehsil.tehsil_id} hover>
-                                        <TableCell>{tehsil.tehsil_id}</TableCell>
-                                        <TableCell>{tehsil.tehsil_name}</TableCell>
-                                        <TableCell>{getDistrictName(tehsil.district_id)}</TableCell>
-                                        <TableCell>{tehsil.status ? 'Active' : 'Inactive'}</TableCell>
-                                        <TableCell>
-                                            <IconButton onClick={() => handleOpen(tehsil)}><EditIcon /></IconButton>
-                                            <IconButton onClick={() => handleDelete(tehsil.tehsil_id)}><DeleteIcon /></IconButton>
-                                        </TableCell>
-                                    </TableRow>
+                                    <tr key={tehsil.tehsil_id}>
+                                        <td>{tehsil.tehsil_id}</td>
+                                        <td>{tehsil.tehsil_name}</td>
+                                        <td>{getDistrictName(tehsil.district_id)}</td>
+                                        <td>{tehsil.status ? 'Active' : 'Inactive'}</td>
+                                        <td>
+                                            <button className="btn-icon" onClick={() => handleOpen(tehsil)} title="Edit">✏️</button>
+                                            <button className="btn-icon" onClick={() => handleDelete(tehsil.tehsil_id)} title="Delete">🗑️</button>
+                                        </td>
+                                    </tr>
                                 ))
                             )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        </tbody>
+                    </table>
+                </div>
             )}
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>{currentTehsil ? 'Edit Tehsil' : 'Add Tehsil'}</DialogTitle>
-                <DialogContent>
-                    <TextField autoFocus margin="dense" name="tehsil_name" label="Tehsil Name" type="text" fullWidth variant="outlined" value={formData.tehsil_name} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <FormControl fullWidth margin="dense" variant="outlined" sx={{ mb: 2 }}>
-                        <InputLabel>District</InputLabel>
-                        <Select name="district_id" value={formData.district_id} onChange={handleChange} label="District">
-                            {districts.map(district => (
-                                <MenuItem key={district.district_id} value={district.district_id}>
-                                    {district.district_name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControlLabel control={<Checkbox checked={formData.status} onChange={handleChange} name="status" />} label="Active" />
-                    <FormControlLabel control={<Checkbox checked={formData.archive} onChange={handleChange} name="archive" />} label="Archive" />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">Save</Button>
-                </DialogActions>
-            </Dialog>
-        </Paper>
+            {open && (
+                <div className="modal-overlay" onClick={handleClose}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <h3>{currentTehsil ? 'Edit Tehsil' : 'Add Tehsil'}</h3>
+                        <form onSubmit={handleSubmit} className="modal-form">
+                            <label>
+                                Tehsil Name
+                                <input type="text" name="tehsil_name" value={formData.tehsil_name} onChange={handleChange} required />
+                            </label>
+                            <label>
+                                District
+                                <select name="district_id" value={formData.district_id} onChange={handleChange} required>
+                                    <option value="">Select District</option>
+                                    {districts.map(district => (
+                                        <option key={district.district_id} value={district.district_id}>{district.district_name}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <div className="form-row">
+                                <label><input type="checkbox" name="status" checked={formData.status} onChange={handleChange} /> Active</label>
+                                <label><input type="checkbox" name="archive" checked={formData.archive} onChange={handleChange} /> Archive</label>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={handleClose}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

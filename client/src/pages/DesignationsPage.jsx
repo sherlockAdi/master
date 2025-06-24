@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import designationService from '../services/designationService';
 import departmentService from '../services/departmentService';
-import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button,
-    Dialog, DialogActions, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel,
-    Select, MenuItem, FormControl, InputLabel, CircularProgress, Typography, Box, IconButton
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import '../main.css';
 
 const DesignationsPage = () => {
     const [designations, setDesignations] = useState([]);
@@ -22,10 +16,10 @@ const DesignationsPage = () => {
     useEffect(() => {
         loadInitialData();
     }, []);
-    
+
     const loadInitialData = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             const [desResponse, deptResponse] = await Promise.all([
                 designationService.getAllDesignations(),
                 departmentService.getAllDepartments()
@@ -33,7 +27,7 @@ const DesignationsPage = () => {
             setDesignations(desResponse.data);
             setDepartments(deptResponse.data);
         } catch (error) {
-            console.error("Failed to load data", error);
+            // handle error
         } finally {
             setLoading(false);
         }
@@ -48,14 +42,16 @@ const DesignationsPage = () => {
         setCurrentDesignation(designation);
         if (designation) {
             setFormData({
-                Desgname: designation.Desgname || '', shortname: designation.shortname || '',
-                departmentid: designation.departmentid || '', status: !!designation.status,
-                archive: !!designation.archive, gradeid: designation.gradeid || ''
+                Desgname: designation.Desgname || '',
+                shortname: designation.shortname || '',
+                departmentid: designation.departmentid || '',
+                status: !!designation.status,
+                archive: !!designation.archive,
+                gradeid: designation.gradeid || ''
             });
         } else {
             setFormData({
-                Desgname: '', shortname: '', departmentid: '', status: true,
-                archive: false, gradeid: ''
+                Desgname: '', shortname: '', departmentid: '', status: true, archive: false, gradeid: ''
             });
         }
         setOpen(true);
@@ -71,7 +67,8 @@ const DesignationsPage = () => {
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         if (currentDesignation) {
             await designationService.updateDesignation(currentDesignation.id, formData);
         } else {
@@ -89,82 +86,89 @@ const DesignationsPage = () => {
     const getDepartmentName = (departmentid) => {
         const department = departments.find(d => d.id === departmentid);
         return department ? department.DeptName : 'N/A';
-    }
+    };
 
     return (
-        <Paper sx={{ p: 2, margin: 'auto', maxWidth: 1200, flexGrow: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h4">Designations</Typography>
-                <Button variant="contained" onClick={() => handleOpen()}>Add Designation</Button>
-            </Box>
-
+        <div className="page-card">
+            <div className="page-header">
+                <h2>Designations</h2>
+                <button className="btn-primary" onClick={() => handleOpen()}>+ Add Designation</button>
+            </div>
             {loading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 400 }}>
-                    <CircularProgress />
-                </Box>
+                <div className="loader">Loading...</div>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Name</TableCell>
-                                <TableCell>Department</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                <div className="table-responsive">
+                    <table className="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             {designations.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        No designations found.
-                                    </TableCell>
-                                </TableRow>
+                                <tr><td colSpan={5} style={{ textAlign: 'center' }}>No designations found.</td></tr>
                             ) : (
                                 designations.map((designation) => (
-                                    <TableRow key={designation.id} hover>
-                                        <TableCell>{designation.id}</TableCell>
-                                        <TableCell>{designation.Desgname}</TableCell>
-                                        <TableCell>{getDepartmentName(designation.departmentid)}</TableCell>
-                                        <TableCell>{designation.status ? 'Active' : 'Inactive'}</TableCell>
-                                        <TableCell>
-                                            <IconButton onClick={() => handleOpen(designation)}><EditIcon /></IconButton>
-                                            <IconButton onClick={() => handleDelete(designation.id)}><DeleteIcon /></IconButton>
-                                        </TableCell>
-                                    </TableRow>
+                                    <tr key={designation.id}>
+                                        <td>{designation.id}</td>
+                                        <td>{designation.Desgname}</td>
+                                        <td>{getDepartmentName(designation.departmentid)}</td>
+                                        <td>{designation.status ? 'Active' : 'Inactive'}</td>
+                                        <td>
+                                            <button className="btn-icon" onClick={() => handleOpen(designation)} title="Edit">✏️</button>
+                                            <button className="btn-icon" onClick={() => handleDelete(designation.id)} title="Delete">🗑️</button>
+                                        </td>
+                                    </tr>
                                 ))
                             )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        </tbody>
+                    </table>
+                </div>
             )}
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>{currentDesignation ? 'Edit Designation' : 'Add Designation'}</DialogTitle>
-                <DialogContent>
-                    <TextField autoFocus margin="dense" name="Desgname" label="Designation Name" type="text" fullWidth variant="outlined" value={formData.Desgname} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <FormControl fullWidth margin="dense" variant="outlined" sx={{ mb: 2 }}>
-                        <InputLabel>Department</InputLabel>
-                        <Select name="departmentid" value={formData.departmentid} onChange={handleChange} label="Department">
-                            {departments.map(department => (
-                                <MenuItem key={department.id} value={department.id}>
-                                    {department.DeptName}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <TextField margin="dense" name="shortname" label="Short Name" type="text" fullWidth variant="outlined" value={formData.shortname} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <TextField margin="dense" name="gradeid" label="Grade ID" type="text" fullWidth variant="outlined" value={formData.gradeid} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <FormControlLabel control={<Checkbox checked={formData.status} onChange={handleChange} name="status" />} label="Active"/>
-                    <FormControlLabel control={<Checkbox checked={formData.archive} onChange={handleChange} name="archive" />} label="Archive"/>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">Save</Button>
-                </DialogActions>
-            </Dialog>
-        </Paper>
+            {open && (
+                <div className="modal-overlay" onClick={handleClose}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <h3>{currentDesignation ? 'Edit Designation' : 'Add Designation'}</h3>
+                        <form onSubmit={handleSubmit} className="modal-form">
+                            <label>
+                                Designation Name
+                                <input type="text" name="Desgname" value={formData.Desgname} onChange={handleChange} required />
+                            </label>
+                            <label>
+                                Department
+                                <select name="departmentid" value={formData.departmentid} onChange={handleChange} required>
+                                    <option value="">Select Department</option>
+                                    {departments.map(dept => (
+                                        <option key={dept.id} value={dept.id}>{dept.DeptName}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label>
+                                Short Name
+                                <input type="text" name="shortname" value={formData.shortname} onChange={handleChange} />
+                            </label>
+                            <label>
+                                Grade ID
+                                <input type="text" name="gradeid" value={formData.gradeid} onChange={handleChange} />
+                            </label>
+                            <div className="form-row">
+                                <label><input type="checkbox" name="status" checked={formData.status} onChange={handleChange} /> Active</label>
+                                <label><input type="checkbox" name="archive" checked={formData.archive} onChange={handleChange} /> Archive</label>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={handleClose}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

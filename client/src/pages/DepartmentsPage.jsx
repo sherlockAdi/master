@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import departmentService from '../services/departmentService';
-import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button,
-    Dialog, DialogActions, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel,
-    CircularProgress, Typography, Box, IconButton
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import '../main.css';
+
+console.log('hello world');
 
 const DepartmentsPage = () => {
     const [departments, setDepartments] = useState([]);
@@ -14,8 +10,7 @@ const DepartmentsPage = () => {
     const [open, setOpen] = useState(false);
     const [currentDepartment, setCurrentDepartment] = useState(null);
     const [formData, setFormData] = useState({
-        DeptName: '', Deptid: '', shortname: '', status: true,
-        archive: false, showonwebsite: false, aboutdeptt: ''
+        DeptName: '', shortname: '', status: true, archive: false, showonwebsite: false, aboutdeptt: ''
     });
 
     useEffect(() => {
@@ -23,12 +18,12 @@ const DepartmentsPage = () => {
     }, []);
 
     const loadDepartments = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             const response = await departmentService.getAllDepartments();
             setDepartments(response.data);
         } catch (error) {
-            console.error("Failed to load departments", error);
+            // handle error
         } finally {
             setLoading(false);
         }
@@ -38,15 +33,16 @@ const DepartmentsPage = () => {
         setCurrentDepartment(department);
         if (department) {
             setFormData({
-                DeptName: department.DeptName || '', Deptid: department.Deptid || '',
-                shortname: department.shortname || '', status: !!department.status,
-                archive: !!department.archive, showonwebsite: !!department.showonwebsite,
+                DeptName: department.DeptName || '',
+                shortname: department.shortname || '',
+                status: !!department.status,
+                archive: !!department.archive,
+                showonwebsite: !!department.showonwebsite,
                 aboutdeptt: department.aboutdeptt || ''
             });
         } else {
             setFormData({
-                DeptName: '', Deptid: '', shortname: '', status: true,
-                archive: false, showonwebsite: false, aboutdeptt: ''
+                DeptName: '', shortname: '', status: true, archive: false, showonwebsite: false, aboutdeptt: ''
             });
         }
         setOpen(true);
@@ -62,7 +58,8 @@ const DepartmentsPage = () => {
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         if (currentDepartment) {
             await departmentService.updateDepartment(currentDepartment.id, formData);
         } else {
@@ -78,70 +75,78 @@ const DepartmentsPage = () => {
     };
 
     return (
-        <Paper sx={{ p: 2, margin: 'auto', maxWidth: 1200, flexGrow: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h4">Departments</Typography>
-                <Button variant="contained" onClick={() => handleOpen()}>Add Department</Button>
-            </Box>
-
+        <div className="page-card">
+            <div className="page-header">
+                <h2>Departments</h2>
+                <button className="btn-primary" onClick={() => handleOpen()}>+ Add Department</button>
+            </div>
             {loading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 400 }}>
-                    <CircularProgress />
-                </Box>
+                <div className="loader">Loading...</div>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Name</TableCell>
-                                <TableCell>Short Name</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                <div className="table-responsive">
+                    <table className="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Short Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             {departments.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center">
-                                        No departments found.
-                                    </TableCell>
-                                </TableRow>
+                                <tr><td colSpan={5} style={{ textAlign: 'center' }}>No departments found.</td></tr>
                             ) : (
                                 departments.map((department) => (
-                                    <TableRow key={department.id} hover>
-                                        <TableCell>{department.id}</TableCell>
-                                        <TableCell>{department.DeptName}</TableCell>
-                                        <TableCell>{department.shortname}</TableCell>
-                                        <TableCell>{department.status ? 'Active' : 'Inactive'}</TableCell>
-                                        <TableCell>
-                                            <IconButton onClick={() => handleOpen(department)}><EditIcon /></IconButton>
-                                            <IconButton onClick={() => handleDelete(department.id)}><DeleteIcon /></IconButton>
-                                        </TableCell>
-                                    </TableRow>
+                                    <tr key={department.id}>
+                                        <td>{department.id}</td>
+                                        <td>{department.DeptName}</td>
+                                        <td>{department.shortname}</td>
+                                        <td>{department.status ? 'Active' : 'Inactive'}</td>
+                                        <td>
+                                            <button className="btn-icon" onClick={() => handleOpen(department)} title="Edit">✏️</button>
+                                            <button className="btn-icon" onClick={() => handleDelete(department.id)} title="Delete">🗑️</button>
+                                        </td>
+                                    </tr>
                                 ))
                             )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        </tbody>
+                    </table>
+                </div>
             )}
 
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>{currentDepartment ? 'Edit Department' : 'Add Department'}</DialogTitle>
-                <DialogContent>
-                    <TextField autoFocus margin="dense" name="DeptName" label="Department Name" type="text" fullWidth variant="outlined" value={formData.DeptName} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <TextField margin="dense" name="shortname" label="Short Name" type="text" fullWidth variant="outlined" value={formData.shortname} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <TextField margin="dense" name="aboutdeptt" label="About Department" type="text" fullWidth multiline rows={3} variant="outlined" value={formData.aboutdeptt} onChange={handleChange} sx={{ mb: 2 }}/>
-                    <FormControlLabel control={<Checkbox checked={formData.status} onChange={handleChange} name="status" />} label="Active" />
-                    <FormControlLabel control={<Checkbox checked={formData.archive} onChange={handleChange} name="archive" />} label="Archive" />
-                    <FormControlLabel control={<Checkbox checked={formData.showonwebsite} onChange={handleChange} name="showonwebsite" />} label="Show on Website" />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">Save</Button>
-                </DialogActions>
-            </Dialog>
-        </Paper>
+            {open && (
+                <div className="modal-overlay" onClick={handleClose}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <h3>{currentDepartment ? 'Edit Department' : 'Add Department'}</h3>
+                        <form onSubmit={handleSubmit} className="modal-form">
+                            <label>
+                                Department Name
+                                <input type="text" name="DeptName" value={formData.DeptName} onChange={handleChange} required />
+                            </label>
+                            <label>
+                                Short Name
+                                <input type="text" name="shortname" value={formData.shortname} onChange={handleChange} />
+                            </label>
+                            <label>
+                                About Department
+                                <textarea name="aboutdeptt" value={formData.aboutdeptt} onChange={handleChange} rows={2} />
+                            </label>
+                            <div className="form-row">
+                                <label><input type="checkbox" name="status" checked={formData.status} onChange={handleChange} /> Active</label>
+                                <label><input type="checkbox" name="archive" checked={formData.archive} onChange={handleChange} /> Archive</label>
+                                <label><input type="checkbox" name="showonwebsite" checked={formData.showonwebsite} onChange={handleChange} /> Show on Website</label>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={handleClose}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
