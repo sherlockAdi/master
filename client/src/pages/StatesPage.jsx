@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import stateService from '../services/stateService';
 import countryService from '../services/countryService';
-import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button,
-    Dialog, DialogActions, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel,
-    Select, MenuItem, FormControl, InputLabel
-} from '@mui/material';
+import '../main.css';
 
 const StatesPage = () => {
     const [states, setStates] = useState([]);
     const [countries, setCountries] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [currentState, setCurrentState] = useState(null);
     const [formData, setFormData] = useState({ conid: '', state: '', status: true, archive: false });
@@ -20,13 +17,24 @@ const StatesPage = () => {
     }, []);
 
     const loadStates = async () => {
-        const response = await stateService.getAllStates();
-        setStates(response.data);
+        setLoading(true);
+        try {
+            const response = await stateService.getAllStates();
+            setStates(response.data);
+        } catch (error) {
+            // handle error
+        } finally {
+            setLoading(false);
+        }
     };
     
     const loadCountries = async () => {
-        const response = await countryService.getAllCountries();
-        setCountries(response.data);
+        try {
+            const response = await countryService.getAllCountries();
+            setCountries(response.data);
+        } catch (error) {
+            // handle error
+        }
     };
 
     const handleOpen = (state = null) => {
@@ -49,7 +57,8 @@ const StatesPage = () => {
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         if (currentState) {
             await stateService.updateState(currentState.stateid, formData);
         } else {
@@ -67,84 +76,82 @@ const StatesPage = () => {
     const getCountryName = (conid) => {
         const country = countries.find(c => c.conid === conid);
         return country ? country.country : '';
-    }
+    };
 
     return (
-        <div>
-            <h2>States</h2>
-            <Button variant="contained" onClick={() => handleOpen()}>Add State</Button>
-            <TableContainer component={Paper} sx={{ mt: 2 }}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>State</TableCell>
-                            <TableCell>Country</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell>Archive</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {states.map((state) => (
-                            <TableRow key={state.stateid}>
-                                <TableCell>{state.stateid}</TableCell>
-                                <TableCell>{state.state}</TableCell>
-                                <TableCell>{getCountryName(state.conid)}</TableCell>
-                                <TableCell>{state.status ? 'Active' : 'Inactive'}</TableCell>
-                                <TableCell>{state.archive ? 'Yes' : 'No'}</TableCell>
-                                <TableCell>
-                                    <Button onClick={() => handleOpen(state)}>Edit</Button>
-                                    <Button onClick={() => handleDelete(state.stateid)}>Delete</Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+        <div className="page-card">
+            <div className="page-header">
+                <h2>States</h2>
+                <button className="btn-primary" onClick={() => handleOpen()}>+ Add State</button>
+            </div>
+            {loading ? (
+                <div className="loader">Loading...</div>
+            ) : (
+                <div className="table-responsive">
+                    <table className="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>State</th>
+                                <th>Country</th>
+                                <th>Status</th>
+                                <th>Archive</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {states.length === 0 ? (
+                                <tr><td colSpan={6} style={{ textAlign: 'center' }}>No states found.</td></tr>
+                            ) : (
+                                states.map((state) => (
+                                    <tr key={state.stateid}>
+                                        <td>{state.stateid}</td>
+                                        <td>{state.state}</td>
+                                        <td>{getCountryName(state.conid)}</td>
+                                        <td>{state.status ? 'Active' : 'Inactive'}</td>
+                                        <td>{state.archive ? 'Yes' : 'No'}</td>
+                                        <td>
+                                            <button className="btn-icon" onClick={() => handleOpen(state)} title="Edit">✏️</button>
+                                            <button className="btn-icon" onClick={() => handleDelete(state.stateid)} title="Delete">🗑️</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>{currentState ? 'Edit State' : 'Add State'}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        name="state"
-                        label="State Name"
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        value={formData.state}
-                        onChange={handleChange}
-                    />
-                     <FormControl fullWidth margin="dense">
-                        <InputLabel>Country</InputLabel>
-                        <Select
-                            name="conid"
-                            value={formData.conid}
-                            onChange={handleChange}
-                        >
-                            {countries.map(country => (
-                                <MenuItem key={country.conid} value={country.conid}>
-                                    {country.country}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControlLabel
-                        control={<Checkbox checked={formData.status} onChange={handleChange} name="status" />}
-                        label="Active"
-                    />
-                    <FormControlLabel
-                        control={<Checkbox checked={formData.archive} onChange={handleChange} name="archive" />}
-                        label="Archive"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit}>Save</Button>
-                </DialogActions>
-            </Dialog>
+            {open && (
+                <div className="modal-overlay" onClick={handleClose}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <h3>{currentState ? 'Edit State' : 'Add State'}</h3>
+                        <form onSubmit={handleSubmit} className="modal-form">
+                            <label>
+                                State Name
+                                <input type="text" name="state" value={formData.state} onChange={handleChange} required />
+                            </label>
+                            <label>
+                                Country
+                                <select name="conid" value={formData.conid} onChange={handleChange} required>
+                                    <option value="">Select Country</option>
+                                    {countries.map(country => (
+                                        <option key={country.conid} value={country.conid}>{country.country}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <div className="form-row">
+                                <label><input type="checkbox" name="status" checked={formData.status} onChange={handleChange} /> Active</label>
+                                <label><input type="checkbox" name="archive" checked={formData.archive} onChange={handleChange} /> Archive</label>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={handleClose}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
